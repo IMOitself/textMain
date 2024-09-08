@@ -1,0 +1,43 @@
+name: Sync to text repo
+
+on:
+  push:
+    branches:
+      - main  # or whatever your default branch is named
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout textMain
+      uses: actions/checkout@v2
+      with:
+        path: textMain
+        fetch-depth: 2  # We need at least 2 commits to get the commit message
+
+    - name: Checkout text repo
+      uses: actions/checkout@v2
+      with:
+        repository: IMOitself/text
+        token: ${{ secrets.PAT_TOKEN }}
+        path: text
+
+    - name: Sync changes
+      run: |
+        # Get the latest commit message
+        cd textMain
+        COMMIT_MSG=$(git log -1 --pretty=%B)
+        cd ..
+
+        # Sync changes
+        cd text
+        rm -rf app/src/main
+        mkdir -p app/src/main
+        cp -R ../textMain/* app/src/main/
+        rm -rf app/src/main/.github  # Remove .github folder
+
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add app/src/main
+        git commit -m "$COMMIT_MSG" || echo "No changes to commit"
+        git push
