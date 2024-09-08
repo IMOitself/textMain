@@ -36,7 +36,7 @@ jobs:
         cp -R ../textMain/* app/src/main/
         rm -rf app/src/main/.github  # Remove .github folder
 
-        git config user.name IMO-AndroidIDE
+        git config user.name IMO-AIDE
         git config user.email russjonn@gmail.com
         git add app/src/main
         git commit -m "$COMMIT_MSG" || echo "No changes to commit"
