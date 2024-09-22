@@ -18,6 +18,7 @@ public class Editor extends View {
     Paint mPaint;
     Rect textBounds;
     Rect cursorRect;
+    Rect charCursor;
     
     int touchX = 0;
     int touchY = 0;
@@ -68,12 +69,10 @@ public class Editor extends View {
 
         int lastBottom = 0;
         int lineIndex = 0;
-        
+
         for (Line line : Lines) {
             String lineText = line.text;
-            
-            // Measure text bounds
-            mPaint.getTextBounds(lineText, 0, lineText.length(), textBounds);
+            int cumulativeWidth = 0;
 
             // Initialize line height and spacing (only once)
             if (lineHeight == -1) {
@@ -85,27 +84,42 @@ public class Editor extends View {
             line.top = lastBottom;
             line.bottom = line.top + lineHeight + lineSpacing;
 
-            cursorRect.top = line.top;
-            cursorRect.bottom = line.bottom;
-
-            boolean isMoveCursorMode = moveCursorX != 0;
-
-            if(isMoveCursorMode && lineIndex == currCursorLine) {
-                currCursorCharIndex += moveCursorX;
-
-                boolean overLeft = currCursorCharIndex < 0;
-                boolean overRight = currCursorCharIndex > lineText.length() - 1;
-                if(overLeft || overRight) currCursorCharIndex -= moveCursorX;
-
-                drawCursorLine(canvas, line.top, line.bottom);
-                moveCursorX(canvas, currCursorCharIndex, lineText, cursorRect);
-                moveCursorX = 0;
+            if(lineText.isEmpty()) {
+                lastBottom = line.bottom;
+                lineIndex++;
+                continue;
             }
-            // Check if line is touched
-            else if (line.isTouched(touchY)) {
-                currCursorLine = lineIndex;
-                drawCursorLine(canvas, line.top, line.bottom);
-                drawCursorOnTouch(canvas, touchX, lineText, cursorRect);
+
+            // Measure text bounds
+            mPaint.getTextBounds(lineText, 0, lineText.length(), textBounds);
+
+            // Populate charRightPositions
+            if(line.charRightPositions.isEmpty()) {
+                for (int i = 0; i < lineText.length(); i++) {
+                    float charWidth = mPaint.measureText(lineText, i, i + 1);
+                    cumulativeWidth += (int) charWidth;
+
+                    float charRight = cumulativeWidth;
+                    int charPosition = i;
+                    line.charRightPositions.put(charRight, charPosition);
+                }
+            }
+
+            if(line.isTouched(touchY)){
+                mPaint.setColor(Color.DKGRAY);
+                canvas.drawRect(0, line.top, getWidth(), line.bottom, mPaint);
+
+                Float nearestKey = line.charRightPositions.floorKey((float) touchX);
+                Float beforeKey = line.charRightPositions.lowerKey(nearestKey);
+                float charRight = nearestKey;
+                float charLeft = beforeKey + 1; // after the previous charRight
+
+                charCursor.left = (int) charLeft;
+                charCursor.right = (int) charRight;
+                charCursor.top = line.top;
+                charCursor.bottom = line.bottom;
+                mPaint.setColor(0xFF888888);
+                canvas.drawRect(charCursor, mPaint);
             }
 
             // Draw text
