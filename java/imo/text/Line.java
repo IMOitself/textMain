@@ -1,9 +1,11 @@
 package imo.text;
 
-import java.util.TreeMap;
+import android.graphics.RectF;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Line {
-    TreeMap<Float, Integer> charRightPositions = new TreeMap<>();
+    List<RectF> charRects = new ArrayList<>();
     String text;
     int bottom;
     int top;
