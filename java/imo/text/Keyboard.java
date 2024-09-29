@@ -115,6 +115,7 @@ public class Keyboard {
         TextView key0 = mActivity.findViewById(R.id.key_0);
         TextView keyJ = mActivity.findViewById(R.id.key_J);
         TextView keyK = mActivity.findViewById(R.id.key_K);
+        TextView keyW = mActivity.findViewById(R.id.key_W);
         TextView keySpace = mActivity.findViewById(R.id.key_space);
         TextView keyBackspace = mActivity.findViewById(R.id.key_backspace);
         TextView keyEnter = mActivity.findViewById(R.id.key_enter);
@@ -145,6 +146,13 @@ public class Keyboard {
                     @Override
                     public void run() {
                         mEditor.moveCursorY(1);
+                    }
+                }));
+        keyW.setOnTouchListener(
+            continousClick(new Runnable() {
+                    @Override
+                    public void run() {
+                        mEditor.moveCursorToNextWordStart();
                     }
                 }));
         keyK.setOnTouchListener(

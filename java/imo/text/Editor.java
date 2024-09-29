@@ -11,6 +11,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
+import java.util.Arrays;
 
 public class Editor extends View {
     List<Line> Lines = new ArrayList<>();
@@ -66,7 +68,6 @@ public class Editor extends View {
            initLines(Lines);
         
         Line currLine = Lines.get(currLinePosition);
-        
         RectF currCharRect = currLine.charRects.get(currCharPosition);
         
         charCursor = currCharRect;
@@ -110,7 +111,7 @@ public class Editor extends View {
                 
                 break;
             }
-            invalidate(); // will call onDraw()
+            invalidate();
             return true;
         }
         return super.onTouchEvent(event);
@@ -118,7 +119,6 @@ public class Editor extends View {
     
     
     void moveCursorX(int amount){
-        
         int newCharPosition = amount + currCharPosition;
         
         if(newCharPosition < 0) return;
@@ -133,12 +133,38 @@ public class Editor extends View {
         invalidate();
     }
     
+    void moveCursorToNextWordStart(){
+        Line currLine = Lines.get(currLinePosition);
+        char[] charArray = currLine.text.toCharArray();
+        int lastCharIndex = currLine.charRects.size() - 1;
+        int nextSpaceIndex = lastCharIndex;
+        
+        for (int i = currCharPosition; i < charArray.length; i++) {
+            char Char = charArray[i];
+            if(Char == ' '){
+                nextSpaceIndex = i;
+                break;
+            } 
+        }
+        // start of the next word is after the space
+        int startOfWordIndex = nextSpaceIndex + 1;
+        
+        // if over the char count, just return the last index
+        currCharPosition = startOfWordIndex > lastCharIndex ? lastCharIndex : startOfWordIndex;
+        invalidate();
+    }
+    
     void moveCursorY(int amount){
-        int newCharPosition = amount + currLinePosition;
+        int newLinePosition = amount + currLinePosition;
         
-        if(newCharPosition < 0) return;
+        if(newLinePosition < 0) return;
         
-        currLinePosition = newCharPosition;
+        currLinePosition = newLinePosition;
+        
+        // prevent overshoot if the previous line is longer than the new
+        Line line = Lines.get(newLinePosition);
+        if(currCharPosition >= line.charRects.size())
+            currCharPosition = line.charRects.size() - 1;
         invalidate();
     }
     
